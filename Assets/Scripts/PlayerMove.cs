@@ -17,12 +17,15 @@ public class PlayerMove : MonoBehaviour
     // 점프 크기
     public float jumpPower = 5f;
 
+    // 회전 속도
+    public float rotateSpeed = 100f;
+
     void Start()
     {
         cc = GetComponent<CharacterController>();
     }
 
-    
+
     void Update()
     {
         // 사용자의 입력에 따라 전후좌우로 이동하고 싶다.
@@ -36,7 +39,7 @@ public class PlayerMove : MonoBehaviour
 
         // 2.0 사용자가 바라보는 방향으로 입력값 변화시키기
         dir = Camera.main.transform.TransformDirection(dir);
-        
+
 
         // 2.1 중력을 적용한 수직 방향 추가 v = v0 + at
         yVelocity += gravity * Time.deltaTime;
@@ -54,5 +57,19 @@ public class PlayerMove : MonoBehaviour
 
         // 3. 이동
         cc.Move(dir * speed * Time.deltaTime);
+
+        RotatePlayer();
+    }
+
+    void RotatePlayer()
+    {
+        // Controller.LTouch를 RTouch로만 바꾸면 됩니다!
+        float rotateInput = ARAVRInput.GetAxis("Horizontal", ARAVRInput.Controller.RTouch);
+
+        if (Mathf.Abs(rotateInput) > 0.1f)
+        {
+            // 플레이어 몸체 회전
+            transform.Rotate(Vector3.up * rotateInput * rotateSpeed * Time.deltaTime);
+        }
     }
 }

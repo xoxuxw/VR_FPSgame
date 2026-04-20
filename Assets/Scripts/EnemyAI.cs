@@ -9,7 +9,7 @@ public class EnemyAI : MonoBehaviour
     public float damage = 10f;
     public float attackRange = 2.0f;
     public float attackCooldown = 1.5f;
-    public float attackDamageDelay = 0.5f; 
+    public float attackDamageDelay = 0.5f;
 
     private NavMeshAgent agent;
     private Animator anim;
@@ -21,10 +21,10 @@ public class EnemyAI : MonoBehaviour
     {
         agent = GetComponent<NavMeshAgent>();
         anim = GetComponent<Animator>();
-        
+
         // 최적화: 회피 품질 낮춤
         agent.obstacleAvoidanceType = ObstacleAvoidanceType.LowQualityObstacleAvoidance;
-        
+
         playerHealth = GameObject.FindObjectOfType<PlayerHealth>();
 
         // 0.2초마다 경로 갱신 (렉 방지)
@@ -35,20 +35,30 @@ public class EnemyAI : MonoBehaviour
     {
         while (!isDead)
         {
-            if (playerHealth != null)
+            if (playerHealth != null && agent != null)
             {
-                float distance = Vector3.Distance(transform.position, playerHealth.transform.position);
-                if (distance > attackRange)
+                // [핵심] 에이전트가 NavMesh 위에 정상적으로 배치되었을 때만 명령 실행
+                if (agent.isOnNavMesh)
                 {
-                    agent.isStopped = false;
-                    agent.SetDestination(playerHealth.transform.position);
+                    float distance = Vector3.Distance(transform.position, playerHealth.transform.position);
+
+                    if (distance > attackRange)
+                    {
+                        agent.isStopped = false; // 여기서 Resume 오류가 발생했던 것!
+                        agent.SetDestination(playerHealth.transform.position);
+                    }
+                    else
+                    {
+                        agent.isStopped = true;
+                    }
                 }
                 else
                 {
-                    agent.isStopped = true;
+                    // 아직 NavMesh 위에 없다면 잠시 대기
+                    Debug.LogWarning(gameObject.name + "가 아직 NavMesh 위에 없습니다!");
                 }
             }
-            yield return new WaitForSeconds(0.2f); 
+            yield return new WaitForSeconds(0.2f);
         }
     }
 
@@ -64,15 +74,15 @@ public class EnemyAI : MonoBehaviour
         }
     }
 
-    void Attack() 
-    { 
-        anim.SetTrigger("Attack"); 
-        StartCoroutine(DamageDelay()); 
+    void Attack()
+    {
+        anim.SetTrigger("Attack");
+        StartCoroutine(DamageDelay());
     }
 
-    IEnumerator DamageDelay() 
+    IEnumerator DamageDelay()
     {
-        yield return new WaitForSeconds(attackDamageDelay); 
+        yield return new WaitForSeconds(attackDamageDelay);
         if (playerHealth != null && !isDead)
         {
             float distance = Vector3.Distance(transform.position, playerHealth.transform.position);
@@ -83,28 +93,28 @@ public class EnemyAI : MonoBehaviour
         }
     }
 
-    public void TakeDamage(float amt) 
-    { 
+    public void TakeDamage(float amt)
+    {
         if (isDead) return;
-        hp -= amt; 
-        if (hp <= 0) Die(); 
+        hp -= amt;
+        if (hp <= 0) Die();
     }
 
-    void Die() 
-    { 
+    void Die()
+    {
         if (isDead) return;
-        isDead = true; 
-        
+        isDead = true;
+
         agent.isStopped = true;
-        agent.enabled = false; 
-        anim.SetTrigger("Die"); 
-        
+        agent.enabled = false;
+        anim.SetTrigger("Die");
+
         // [중요] 죽는 순간 매니저에게 신호를 보냄
         // if (WaveManager.instance != null)
         // {
         //     WaveManager.instance.EnemyDefeated();
         // }
-        
-        Destroy(gameObject, 3f); 
+
+        Destroy(gameObject, 3f);
     }
 }
