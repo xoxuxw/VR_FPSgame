@@ -1,0 +1,13 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1045 &1
+EditorBuildSettings:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Scenes:
+  - enabled: 1
+    path: Assets/Versatile Studio Assets/Demo City By Versatile Studio/Scenes/demo_city_night.unity
+    guid: 3dd6985d248a2724291b46a30456112a
+  m_configObjects:
+    Unity.XR.Oculus.Settings: {fileID: 11400000, guid: 9c3901cd3c76dab4ab0ca85f5f500890, type: 2}
+    com.unity.xr.management.loader_settings: {fileID: 11400000, guid: 160802c243ed6c546a19022caf29157b, type: 2}
