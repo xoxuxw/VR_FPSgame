@@ -61,47 +61,50 @@ public class PlayerHealth : MonoBehaviour
 
     void Die()
     {
-        // 이미 죽은 상태라면 다시 실행하지 않음 (무한 루프 방지)
         if (isDead) return;
         isDead = true;
 
-        Debug.Log("사망 로직 시작 - 에디터를 멈추지 않습니다.");
-
-        // 1. 모든 적들을 찾아서 로직만 정지
+        // 1. 맵에 있는 모든 적(EnemyAI 스크립트가 붙은 오브젝트)을 찾음
         EnemyAI[] enemies = FindObjectsOfType<EnemyAI>();
+
         foreach (EnemyAI enemy in enemies)
         {
+            // [얼음 단계 1] 공격 및 추적 로직 스크립트 자체를 끔
             enemy.enabled = false;
 
-            var agent = enemy.GetComponent<UnityEngine.AI.NavMeshAgent>();
-            if (agent != null && agent.isOnNavMesh)
+            // [얼음 단계 2] 네비게이션 에이전트 제어
+            UnityEngine.AI.NavMeshAgent agent = enemy.GetComponent<UnityEngine.AI.NavMeshAgent>();
+            if (agent != null)
             {
-                agent.isStopped = true; // enabled = false 대신 우선 이걸 써보세요.
+                // 에이전트를 끄기 전에 속도를 완전히 0으로 만듦 (미끄러짐 방지)
                 agent.velocity = Vector3.zero;
+                // 에이전트 컴포넌트를 비활성화해서 길찾기 연산을 완전히 종료
+                agent.enabled = false;
             }
 
-            var anim = enemy.GetComponent<Animator>();
-            if (anim != null) anim.speed = 0;
+            // [얼음 단계 3] 애니메이션 정지
+            Animator anim = enemy.GetComponent<Animator>();
+            if (anim != null)
+            {
+                // 애니메이션 속도를 0으로 만들어 때리던 자세 그대로 멈추게 함
+                anim.speed = 0;
+            }
         }
 
-        // 2. 웨이브 매니저 정지
+        // 2. 웨이브 매니저도 더 이상 적을 소환하지 못하게 정지
         if (WaveManager.instance != null)
         {
             WaveManager.instance.StopAllCoroutines();
             WaveManager.instance.enabled = false;
         }
 
-        // 3. 게임 오버 UI 활성화
+        // 3. 게임 오버 UI 활성화 (이제 엔진이 멈추지 않으므로 버튼 클릭 가능!)
         if (gameOverUI != null)
         {
             gameOverUI.SetActive(true);
         }
-
-        // 절대 넣으면 안 되는 코드:
-        // Time.timeScale = 0; <- 이것도 에디터를 먹통으로 만들 수 있음
-        // Debug.Break(); <- 유니티 에디터를 일시정지 시키는 주범! (삭제 필수)
     }
-    // UI 버튼에 연결하거나 컨트롤러 입력으로 호출
+    
     public void Retry()
     {
 
